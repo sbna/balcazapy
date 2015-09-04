@@ -404,7 +404,8 @@ class Workflow(object):
         # it is only added to the file once.
         uuidCache = set()
         with xml.namespace("http://taverna.sf.net/2008/xml/t2flow") as tav:
-            with tav.workflow(version=1, producedBy=getCreator()):
+            #with tav.workflow(version=1, producedBy=getCreator()):
+            with tav.workflow(version=1):
                 self.exportXMLDataflow(xml, 'top')
                 for flow in self.allDescendants():
                     if flow.id not in uuidCache:

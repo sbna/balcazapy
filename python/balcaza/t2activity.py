@@ -289,7 +289,8 @@ class HTTP_Activity(Activity):
                 conf.httpMethod >> self.httpMethod
                 conf.urlSignature >> self.urlTemplate
                 conf.acceptsHeaderValue >> self.outputContentType
-                conf.contentTypeForUpdates >> ('application/xml', self.inputContentType)[self.inputContentType]
+                if self.inputContentType:
+                    conf.contentTypeForUpdates >> ('application/xml', self.inputContentType)[self.inputContentType]
                 conf.outgoingDataFormat >> ('String', 'Binary')[self.inputBinary]
                 conf.sendHTTPExpectRequestHeader >> T2Boolean[self.sendExpectHeader]
                 conf.showRedirectionOutputPort >> T2Boolean['redirection' in connectedOutputs]
