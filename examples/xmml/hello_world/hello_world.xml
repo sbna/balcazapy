@@ -1,0 +1,43 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE model SYSTEM "xmml.dtd">
+<model id="HWModel" name="Hello World" xmml_version="0.4" xmlns="http://www.mapper-project.eu/xmml" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <description>
+      The Hello World chic-xmml example test.
+    </description>
+
+    <definitions>
+      <xi:include href="isr_meta.xml#xpointer(/metadata/*)"/>
+
+      <terminal id="INPUT1" type="source">
+        <ports>
+          <out id="dataout" datatype="string"/>
+        </ports>
+      </terminal>
+   
+      <submodel id="HW1" name="Hello_World" init="yes" type='BeanShell'>
+	<!-- <timescale delta="10 min" total="1 yr"/> -->
+	<!-- <spacescale id="x" delta="1 m" total="3 km"/> -->
+
+        <ports>
+          <in id="string_input_in" operator="S" datatype="string"/>
+          <out id="string_output_out" operator="Oi" datatype="string"/>
+        </ports>
+      </submodel>
+      
+      <terminal id="OUTPUT1" type="sink">
+        <ports>
+          <in  id="datain" datatype="string"/>
+        </ports>
+      </terminal>
+
+    </definitions>
+  
+  <topology>
+    <instance id="hw1" submodel="HW1"/>
+    <instance id="src" terminal="INPUT1"/>
+    <instance id="snk1" terminal="OUTPUT1"/>
+    
+    <coupling from="src.dataout" to="hw1.string_input_in"/>
+    <coupling from="hw1.string_output_out" to="snk1.datain"/>
+  </topology>
+</model>

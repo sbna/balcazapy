@@ -47,9 +47,73 @@ class T2FlowBuilder:
     def convert(self, sourceFile, t2flow, flowName, compressed, validate, zip):
         import codecs
         import maximal.XMLExport as XMLExport
+        
+        import xmltodict
 
         # the code must be put here
-        flow = readZapyFile(sourceFile, flowName)
+        f = open("/home/adminuser/Software/balcazapy/examples/xmml/hello_world/hello_world.xml", 'r')
+        xmml = xmltodict.parse(f)
+        #print xmml
+        
+        from balcaza.t2types import *
+        from balcaza.t2activity import *
+        from balcaza.t2flow import Workflow
+
+        # create the workflow from the model
+        flow = Workflow(title = xmml['model']['@name'], description = xmml['model']['description'])
+        
+        terminals = dict()
+        nsubmodels = dict()
+        
+        nelements =  len (xmml['model']['definitions'])
+        definitions = xmml['model']['definitions']
+
+        for type_elem, elem in definitions.items():
+           if type_elem == 'terminal':
+               for x in elem:
+		   print len(elem)
+           if type_elem == 'submodel':
+               print len(elem)
+
+		 
+        #terminals = dict()
+        #nterminals = len (xmml['model']['definitions']['terminal'])
+        #for x in range (0, nterminals):
+            #terminals[xmml['model']['definitions']['terminal'][x]['@id']] = xmml['model']['definitions']['terminal'][x]
+            
+        ##print terminals
+        
+        #submodels = dict()
+        #print xmml['model']['definitions']['submodel']
+        #nsubmodels = len (xmml['model']['definitions']['submodel'])
+        #print len (xmml['model']['definitions'])
+        ##for x in range (0, nsubmodels):
+	    ##print xmml['model']['definitions']['terminal'][x]['@type']
+        
+        bnshcode = flow.task.MyTask << BeanshellCode("""outputstr = string1 + string2;""",
+			inputs = dict(
+			  string1 = String,
+			  string2 = String
+			  ),
+			outputs = dict(
+			  outputstr = String
+			  )
+	  )
+
+        
+        flow.input.string1 | bnshcode.input.string1
+        flow.input.string2 | bnshcode.input.string2
+        
+        bnshcode.output.outputstr | flow.output.output_str        
+
+        #GetWebPage = flow.task.RetrieveWebPage << HTTP.GET('http://www.biovel.eu/')
+
+        #from balcaza.activity.local.list import MergeStringListToString
+
+        #GetWebPage | XPath('/xhtml:html/xhtml:head/xhtml:title', {'xhtml': 'http://www.w3.org/1999/xhtml'}) | MergeStringListToString | flow.output.title
+
+        #GetWebPage.output.responseHeaders | MergeStringListToString | flow.output.headers
+        ##flow = readZapyFile(sourceFile, flowName)
 
         if validate:
             from t2wrapper import WrapperWorkflow
@@ -58,10 +122,12 @@ class T2FlowBuilder:
         UTF8Writer = codecs.getwriter('utf8')
         output = UTF8Writer(t2flow)
 
-        if compressed:
-            flow.exportXML(XMLExport.XMLExporter(XMLExport.XMLCompressor(output)))
-        else:
-            flow.exportXML(XMLExport.XMLExporter(XMLExport.XMLIndenter(output)))
+        #if compressed:
+	#    print 'compressed'
+        #    flow.exportXML(XMLExport.XMLExporter(XMLExport.XMLCompressor(output)))
+        #else:
+	#    print 'not compressed'
+        flow.exportXML(XMLExport.XMLExporter(XMLExport.XMLIndenter(output)))
 
 if __name__ == '__main__':
     import argparse
