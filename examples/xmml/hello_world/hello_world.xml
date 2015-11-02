@@ -10,18 +10,26 @@
 
       <terminal id="INPUT1" type="source">
         <ports>
-          <out id="dataout" datatype="string"/>
+          <out id="dataout1" datatype="string"/>
+          <out id="dataout2" datatype="string"/>
         </ports>
       </terminal>
    
-      <submodel id="HW1" name="Hello_World" init="yes" type='BeanShell'>
+      <submodel id="HW1" name="Hello_World" init="yes" type='BeanshellCode'>
 	<!-- <timescale delta="10 min" total="1 yr"/> -->
 	<!-- <spacescale id="x" delta="1 m" total="3 km"/> -->
 
         <ports>
-          <in id="string_input_in" operator="S" datatype="string"/>
-          <out id="string_output_out" operator="Oi" datatype="string"/>
+          <in id="string1" operator="S" datatype="string"/>
+          <in id="string2" operator="S" datatype="string"/>
+          <out id="outputstr" operator="Oi" datatype="string"/>
         </ports>
+	<implementation>
+          <interpreter name="taverna2"/>
+          <code language="BeanShell" part="body">
+            outputstr = string1 + string2;
+          </code>
+        </implementation>
       </submodel>
       
       <terminal id="OUTPUT1" type="sink">
@@ -37,7 +45,8 @@
     <instance id="src" terminal="INPUT1"/>
     <instance id="snk1" terminal="OUTPUT1"/>
     
-    <coupling from="src.dataout" to="hw1.string_input_in"/>
-    <coupling from="hw1.string_output_out" to="snk1.datain"/>
+    <coupling from="src.dataout1" to="hw1.string1"/>
+    <coupling from="src.dataout2" to="hw1.string2"/>
+    <coupling from="hw1.outputstr" to="snk1.datain"/>
   </topology>
 </model>
