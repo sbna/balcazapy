@@ -1,0 +1,67 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE model SYSTEM "xmml.dtd">
+<model id="HWModel" name="Hello World" xmml_version="0.4" xmlns="http://www.mapper-project.eu/xmml" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <description>
+      The Hello World chic-xmml example test.
+    </description>
+
+    <definitions>
+      <xi:include href="isr_meta.xml#xpointer(/metadata/*)"/>
+
+      <terminal id="INPUT1" type="source">
+        <ports>
+          <out id="datain1" datatype="string"/>
+          <out id="datain2" datatype="string"/>
+          <out id="datain3" datatype="string"/>
+        </ports>
+      </terminal>
+   
+      <submodel id="HW1" name="Hello_World" type='BeanshellCode'>
+        <ports>
+          <in id="string1" datatype="string"/>
+          <in id="string2" datatype="string"/>
+          <out id="outputstr" datatype="string"/>
+        </ports>
+	<implementation>
+          <interpreter name="taverna2"/>
+          <code language="BeanShell" part="body">
+            outputstr = string1 + string2;
+          </code>
+        </implementation>
+      </submodel>
+      
+      <submodel id="HW2" name="Hello_World_2" type='BeanshellCode'>
+        <ports>
+          <in id="stringfrommodel1" datatype="string"/>
+          <in id="string3" datatype="string"/>
+          <out id="outputfinalstr" datatype="string"/>
+        </ports>
+	<implementation>
+          <interpreter name="taverna2"/>
+          <code language="BeanShell" part="body">
+            outputfinalstr = stringfrommodel1 + string3;
+          </code>
+        </implementation>
+      </submodel>
+      
+      <terminal id="OUTPUT1" type="sink">
+        <ports>
+          <in  id="dataout" datatype="string"/>
+        </ports>
+      </terminal>
+
+    </definitions>
+  
+  <topology>
+    <instance id="hw1" submodel="HW1"/>
+    <instance id="hw2" submodel="HW2"/>
+    <instance id="src" terminal="INPUT1"/>
+    <instance id="snk1" terminal="OUTPUT1"/>
+    
+    <coupling from="src.datain1" to="hw1.string1"/>
+    <coupling from="src.datain2" to="hw1.string2"/>
+    <coupling from="hw1.outputstr" to="hw2.stringfrommodel1"/>
+    <coupling from="src.datain3" to="hw2.string3"/>
+    <coupling from="hw2.outputfinalstr" to="snk1.dataout"/>
+  </topology>
+</model>
