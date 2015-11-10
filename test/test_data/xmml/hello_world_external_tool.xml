@@ -1,0 +1,50 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE model SYSTEM "xmml.dtd">
+<model id="HWModel" name="Hello World" xmml_version="0.4" xmlns="http://www.mapper-project.eu/xmml" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <description>
+      The Hello World chic-xmml example test.
+    </description>
+
+    <definitions>
+      <xi:include href="isr_meta.xml#xpointer(/metadata/*)"/>
+
+      <terminal id="INPUT1" type="source">
+        <ports>
+          <out id="dataout1" datatype="string"/>
+          <out id="dataout2" datatype="string"/>
+        </ports>
+      </terminal>
+   
+      <submodel id="HW1" name="Hello_World" init="yes" type='ExternalTool'>
+        <ports>
+          <in id="string1" datatype="string"/>
+          <in id="string2" datatype="string"/>
+          <out id="outputstr" datatype="string"/>
+        </ports>
+	<implementation>
+          <interpreter name="taverna2"/>
+          <code language="Bash" part="body">
+            echo %%string1%% %%string2%%
+echo %%string1%% %%string2%% > outputstr
+          </code>
+        </implementation>
+      </submodel>
+      
+      <terminal id="OUTPUT1" type="sink">
+        <ports>
+          <in  id="datain" datatype="string"/>
+        </ports>
+      </terminal>
+
+    </definitions>
+  
+  <topology>
+    <instance id="hw1" submodel="HW1"/>
+    <instance id="src" terminal="INPUT1"/>
+    <instance id="snk1" terminal="OUTPUT1"/>
+    
+    <coupling from="src.dataout1" to="hw1.string1"/>
+    <coupling from="src.dataout2" to="hw1.string2"/>
+    <coupling from="hw1.outputstr" to="snk1.datain"/>
+  </topology>
+</model>
