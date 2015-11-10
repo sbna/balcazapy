@@ -1,0 +1,245 @@
+<workflow version="1" xmlns="http://taverna.sf.net/2008/xml/t2flow">
+  <dataflow role="top" id="7ee32bb5-1860-4125-9824-2341b8e9b4e2">
+    <name>Hello_World</name>
+    <inputPorts>
+      <port>
+        <name>dataout1</name>
+        <depth>0</depth>
+        <granularDepth>0</granularDepth>
+        <annotations>
+        </annotations>
+      </port>
+      <port>
+        <name>dataout2</name>
+        <depth>0</depth>
+        <granularDepth>0</granularDepth>
+        <annotations>
+        </annotations>
+      </port>
+    </inputPorts>
+    <outputPorts>
+      <port>
+        <name>datain</name>
+        <annotations>
+        </annotations>
+      </port>
+    </outputPorts>
+    <processors>
+      <processor>
+        <name>HW1</name>
+        <inputPorts>
+          <port>
+            <name>string1</name>
+            <depth>0</depth>
+          </port>
+          <port>
+            <name>string2</name>
+            <depth>0</depth>
+          </port>
+        </inputPorts>
+        <outputPorts>
+          <port>
+            <name>outputstr</name>
+            <depth>0</depth>
+            <granularDepth>0</granularDepth>
+          </port>
+        </outputPorts>
+        <annotations>
+        </annotations>
+        <activities>
+          <activity>
+            <raven>
+              <group>net.sf.taverna.t2.activities</group>
+              <artifact>beanshell-activity</artifact>
+              <version>1.0.4</version>
+            </raven>
+            <class>net.sf.taverna.t2.activities.beanshell.BeanshellActivity</class>
+            <inputMap>
+              <map to="string1" from="string1" />
+              <map to="string2" from="string2" />
+            </inputMap>
+            <outputMap>
+              <map to="outputstr" from="outputstr" />
+            </outputMap>
+            <configBean encoding="xstream">
+              <net.sf.taverna.t2.activities.beanshell.BeanshellActivityConfigurationBean xmlns="">
+                <inputs>
+                  <net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityInputPortDefinitionBean>
+                    <name>string2</name>
+                    <depth>0</depth>
+                    <mimeTypes>
+                      <string>text/plain</string>
+                    </mimeTypes>
+                    <handledReferenceSchemes />
+                    <translatedElementType>java.lang.String</translatedElementType>
+                    <allowsLiteralValues>true</allowsLiteralValues>
+                  </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityInputPortDefinitionBean>
+                  <net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityInputPortDefinitionBean>
+                    <name>string1</name>
+                    <depth>0</depth>
+                    <mimeTypes>
+                      <string>text/plain</string>
+                    </mimeTypes>
+                    <handledReferenceSchemes />
+                    <translatedElementType>java.lang.String</translatedElementType>
+                    <allowsLiteralValues>true</allowsLiteralValues>
+                  </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityInputPortDefinitionBean>
+                </inputs>
+                <outputs>
+                  <net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
+                    <name>outputstr</name>
+                    <depth>0</depth>
+                    <mimeTypes />
+                    <granularDepth>0</granularDepth>
+                  </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
+                </outputs>
+                <classLoaderSharing>workflow</classLoaderSharing>
+                <localDependencies>
+                </localDependencies>
+                <artifactDependencies />
+                <script>outputstr = string1 + string2;</script>
+                <dependencies />
+              </net.sf.taverna.t2.activities.beanshell.BeanshellActivityConfigurationBean>
+            </configBean>
+            <annotations />
+          </activity>
+        </activities>
+        <dispatchStack>
+          <dispatchLayer>
+            <raven>
+              <group>net.sf.taverna.t2.core</group>
+              <artifact>workflowmodel-impl</artifact>
+              <version>1.4</version>
+            </raven>
+            <class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Parallelize</class>
+            <configBean encoding="xstream">
+              <net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.ParallelizeConfig xmlns="">
+                <maxJobs>1</maxJobs>
+              </net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.ParallelizeConfig>
+            </configBean>
+          </dispatchLayer>
+          <dispatchLayer>
+            <raven>
+              <group>net.sf.taverna.t2.core</group>
+              <artifact>workflowmodel-impl</artifact>
+              <version>1.4</version>
+            </raven>
+            <class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.ErrorBounce</class>
+            <configBean encoding="xstream">
+              <null xmlns="" />
+            </configBean>
+          </dispatchLayer>
+          <dispatchLayer>
+            <raven>
+              <group>net.sf.taverna.t2.core</group>
+              <artifact>workflowmodel-impl</artifact>
+              <version>1.4</version>
+            </raven>
+            <class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Failover</class>
+            <configBean encoding="xstream">
+              <null xmlns="" />
+            </configBean>
+          </dispatchLayer>
+          <dispatchLayer>
+            <raven>
+              <group>net.sf.taverna.t2.core</group>
+              <artifact>workflowmodel-impl</artifact>
+              <version>1.4</version>
+            </raven>
+            <class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Retry</class>
+            <configBean encoding="xstream">
+              <net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.RetryConfig xmlns="">
+                <backoffFactor>1.0</backoffFactor>
+                <initialDelay>1000</initialDelay>
+                <maxDelay>5000</maxDelay>
+                <maxRetries>0</maxRetries>
+              </net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.RetryConfig>
+            </configBean>
+          </dispatchLayer>
+          <dispatchLayer>
+            <raven>
+              <group>net.sf.taverna.t2.core</group>
+              <artifact>workflowmodel-impl</artifact>
+              <version>1.4</version>
+            </raven>
+            <class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Invoke</class>
+            <configBean encoding="xstream">
+              <null xmlns="" />
+            </configBean>
+          </dispatchLayer>
+        </dispatchStack>
+        <iterationStrategyStack>
+          <iteration>
+            <strategy>
+              <cross>
+                <port depth="0" name="string1" />
+                <port depth="0" name="string2" />
+              </cross>
+            </strategy>
+          </iteration>
+        </iterationStrategyStack>
+      </processor>
+    </processors>
+    <conditions>
+    </conditions>
+    <datalinks>
+      <datalink>
+        <source type="dataflow">
+          <port>dataout1</port>
+        </source>
+        <sink type="processor">
+          <processor>HW1</processor>
+          <port>string1</port>
+        </sink>
+      </datalink>
+      <datalink>
+        <source type="dataflow">
+          <port>dataout2</port>
+        </source>
+        <sink type="processor">
+          <processor>HW1</processor>
+          <port>string2</port>
+        </sink>
+      </datalink>
+      <datalink>
+        <source type="processor">
+          <processor>HW1</processor>
+          <port>outputstr</port>
+        </source>
+        <sink type="dataflow">
+          <port>datain</port>
+        </sink>
+      </datalink>
+    </datalinks>
+    <annotations>
+      <annotation_chain encoding="xstream">
+        <net.sf.taverna.t2.annotation.AnnotationChainImpl xmlns="">
+          <annotationAssertions>
+            <net.sf.taverna.t2.annotation.AnnotationAssertionImpl>
+              <annotationBean class="net.sf.taverna.t2.annotation.annotationbeans.DescriptiveTitle">
+                <text>Hello World</text>
+              </annotationBean>
+              <date>2013-11-27 14:27:50.10 UTC</date>
+              <creators />
+              <curationEventList />
+            </net.sf.taverna.t2.annotation.AnnotationAssertionImpl>
+          </annotationAssertions>
+        </net.sf.taverna.t2.annotation.AnnotationChainImpl>
+      </annotation_chain>
+      <annotation_chain encoding="xstream">
+        <net.sf.taverna.t2.annotation.AnnotationChainImpl xmlns="">
+          <annotationAssertions>
+            <net.sf.taverna.t2.annotation.AnnotationAssertionImpl>
+              <annotationBean class="net.sf.taverna.t2.annotation.annotationbeans.FreeTextDescription">
+                <text>The Hello World chic-xmml example test.</text>
+              </annotationBean>
+              <date>2013-11-27 14:27:50.10 UTC</date>
+              <creators />
+              <curationEventList />
+            </net.sf.taverna.t2.annotation.AnnotationAssertionImpl>
+          </annotationAssertions>
+        </net.sf.taverna.t2.annotation.AnnotationChainImpl>
+      </annotation_chain>
+    </annotations>
+  </dataflow>
+</workflow>

@@ -27,9 +27,17 @@ class TestxMMLtoT2FlowConverter(unittest.TestCase):
     # test the conversion from xMML to t2flow for a set of test inputs
     def test_conversion(self):
         try:
-            outputfilename = "/home/adminuser/Software/balcazapy/test/test_result/xmml/hello_world_2.t2flow"
-            sourcefilename = "/home/adminuser/Software/balcazapy/test/test_data/xmml/hello_world_2.xml"
-            target_name = "hello_world_2_generated"
+            #outputfilename = "/home/adminuser/Software/balcazapy/test/test_result/xmml/hello_world_2.t2flow"
+            #sourcefilename = "/home/adminuser/Software/balcazapy/test/test_data/xmml/hello_world_2.xml"
+            #target_name = "hello_world_2_generated"
+
+            outputfilename = "/home/adminuser/Software/balcazapy/test/test_result/xmml/hello_world.t2flow"
+            sourcefilename = "/home/adminuser/Software/balcazapy/test/test_data/xmml/hello_world.xml"
+            target_name = "hello_world_generated"
+
+            #outputfilename = "/home/adminuser/Software/balcazapy/test/test_result/xmml/hello_world_2.t2flow"
+            #sourcefilename = "/home/adminuser/Software/balcazapy/test/test_data/xmml/hello_world_2.xml"
+            #target_name = "hello_world_2_generated"
 
             # generate the t2flow by conversion
             targetfilename = target_name + '.t2flow'

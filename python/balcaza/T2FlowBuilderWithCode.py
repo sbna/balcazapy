@@ -171,7 +171,7 @@ class T2FlowFromXMMLBuilder:
                         tasks[task_name] = submodel
                 else:
                     task_name = elem['@id']
-                    submodel = self.create_submodel(flow, x)
+                    submodel = self.create_submodel(flow, elem)
                     tasks[task_name] = submodel
             else:
                 pass
