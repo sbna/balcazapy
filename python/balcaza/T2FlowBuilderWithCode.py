@@ -16,6 +16,9 @@
 
 import sys, os
 sys.path.append('../../python')
+from balcaza.t2types import *
+from balcaza.t2activity import *
+from balcaza.t2flow import Workflow
 
 def readZapyFile(sourceFile, flowName):
     with open(sourceFile) as f:
@@ -45,22 +48,88 @@ def printSig(sourceFile, flowName):
 class Terminal:
   
     def __init__(self, kind=None):
-      self._ports = {'_out' : {}, '_in' : {}}
-      self._kind = kind
+        self.ports = {'out' : {}, 'in' : {}}
+        self.kind = kind
     
     def set_type(self, kind):
-      self._kind = kind
+        self.kind = kind
     
     def add_port(self, port_id, port_value):
-        if self._kind == 'source':
-          self._ports['_out'][port_id] = port_value
-        elif self._kind == 'sink':
-          self._ports['_in'][port_id] = port_value
+        if self.kind == 'source':
+            self.ports['out'][port_id] = port_value
+        elif self.kind == 'sink':
+            self.ports['in'][port_id] = port_value
         else:
-	  raise Exception('Error: the kind of terminal is not set!')
+            raise Exception('Error: the kind of terminal is not set!')
+
+class Instance:
+    def __init__(self, kind, content):
+        self.kind = kind
+        self.content = content
 
 
-class T2FlowBuilder:
+class T2FlowFromXMMLBuilder:
+
+    def create_terminal(self, x):
+        terminal = Terminal(kind=x['@type'])
+        if 'out' in x['ports'].keys():
+            if type(x['ports']['out']) is list:
+                for port in x['ports']['out']:
+                    port_id = port['@id']
+                    port_value = {'datatype' : port['@datatype']}
+                    terminal.add_port(port_id, port_value)
+            else:
+                port_id = x['ports']['out']['@id']
+                port_value = {'datatype' : x['ports']['out']['@datatype']}
+                terminal.add_port(port_id, port_value)
+        if 'in' in x['ports'].keys():
+            if type(x['ports']['in']) is list:
+                for port in x['ports']['in']:
+                    port_id = port['@id']
+                    port_value = {'datatype' : port['@datatype']}
+                    terminal.add_port(port_id, port_value)
+            else:
+                port_id = x['ports']['in']['@id']
+                port_value = {'datatype' : x['ports']['in']['@datatype']}
+                terminal.add_port(port_id, port_value)
+        terminal.add_port
+        return terminal
+
+    def create_submodel(self, flow, x):
+        implementation_code  = str(x['implementation']['code']['#text'])
+        task_name = x['@id']
+        if x['@type'] == 'BeanshellCode':
+            #loop over in-ports
+            myinputs = dict()
+            if type(x['ports']['in']) is list:
+                for in_ports in x['ports']['in']:
+                    if in_ports['@datatype'] == 'string':
+                        myinputs[in_ports['@id']] = String
+            else:
+                if x['ports']['in']['@datatype'] == 'string':
+                    myinputs[x['ports']['in']['@id']] = String
+
+            #loop over out-ports
+            myoutputs = dict()
+            if type(x['ports']['out']) is list:
+                for out_ports in x['ports']['out']:
+                    if out_ports['@datatype'] == 'string':
+                        myoutputs[out_ports['@id']] = String
+            else:
+                if x['ports']['out']['@datatype'] == 'string':
+                    myoutputs[x['ports']['out']['@id']] = String
+
+        # BeanshellCode task
+        if x['@type'] == 'BeanshellCode':
+            bnshcode = flow.task[task_name] << BeanshellCode(implementation_code,inputs = myinputs,outputs = myoutputs)
+            return bnshcode
+
+        # ExternalTool task
+        elif x['@type'] == 'ExternalTool':
+            externaltoolcode = flow.task[task_name] << ExternalTool(implementation_code,inputs = myinputs,outputs = myoutputs)
+            return externaltoolcode
+
+
 
     def convert(self, sourceFile, t2flow, flowName, compressed, validate, zip):
         import codecs
@@ -69,198 +138,85 @@ class T2FlowBuilder:
         import xmltodict
 
         # the code must be put here
-        f = open("/home/adminuser/Software/balcazapy/examples/xmml/hello_world/hello_world_2.xml", 'r')
+        f = open(sourceFile, 'r')
+
+        # parse xmml
         xmml = xmltodict.parse(f)
-        #print xmml
-        
-        from balcaza.t2types import *
-        from balcaza.t2activity import *
-        from balcaza.t2flow import Workflow
 
         # create the workflow from the model
         flow = Workflow(title = xmml['model']['@name'], description = xmml['model']['description'])
         
-        # create tasks
+        # create empty terminals and tasks
         terminals = dict()
-        nsubmodels = dict()
-        mytask = dict()
-        
-        nelements =  len (xmml['model']['definitions'])
+        tasks = dict()
+
+        # import definitions
         definitions = xmml['model']['definitions']
 
+        # loop over terminals, submodels
         for type_elem, elem in definitions.items():
             if type_elem == 'terminal':
                 if type(elem) is list:
                     for x in elem:
-                        #print x
-                        terminal = Terminal(kind=x['@type'])
-                        if 'out' in x['ports'].keys():
-                            if type(x['ports']['out']) is list:
-                                for pp in x['ports']['out']:
-                                    port_id = pp['@id']
-                                    port_value = {'datatype' : pp['@datatype']}
-                                    terminal.add_port(port_id, port_value)
-                            else:
-                                port_id = x['ports']['out']['@id']
-                                port_value = {'datatype' : x['ports']['out']['@datatype']}
-                                terminal.add_port(port_id, port_value)
-                        if 'in' in x['ports'].keys():
-                            if type(x['ports']['in']) is list:
-                                for pp in x['ports']['in']:
-                                    port_id = pp['@id']
-                                    port_value = {'datatype' : pp['@datatype']}
-                                    terminal.add_port(port_id, port_value)
-                            else:
-                                port_id = x['ports']['in']['@id']
-                                port_value = {'datatype' : x['ports']['in']['@datatype']}
-                                terminal.add_port(port_id, port_value)
-                        terminal.add_port
+                        terminal = self.create_terminal(x)
                         terminals[x['@id']] = terminal
                 else:
-                    b = 2
-            if type_elem == 'submodel':
+                    terminal = self.create_terminal(elem)
+                    terminals[elem['@id']] = terminal
+            elif type_elem == 'submodel':
                 if type(elem) is list:
                     for x in elem:
-                        implementation_code  = str(x['implementation']['code']['#text'])
                         task_name = x['@id']
-                        if x['@type'] == 'BeanshellCode':
-                            #loop over in-ports
-                            myinputs = dict()
-                            if type(x['ports']['in']) is list:
-                                for in_ports in x['ports']['in']:
-                                    #print in_ports
-                                    if in_ports['@datatype'] == 'string':
-                                        myinputs[in_ports['@id']] = String
-                            else:
-                                if x['ports']['in']['@datatype'] == 'string':
-                                    myoutputs[elem['ports']['in']['@id']] = String
-
-                            #loop over out-ports
-                            myoutputs = dict()
-                            if type(x['ports']['out']) is list:
-                                for out_ports in x['ports']['out']:
-                                    print out_ports
-                                    if out_ports['@datatype'] == 'string':
-                                        myoutputs[out_ports['@id']] = String
-                            else:
-                                if x['ports']['out']['@datatype'] == 'string':
-                                    myoutputs[x['ports']['out']['@id']] = String
-
-                        if x['@type'] == 'BeanshellCode':
-                            # BeanshellCode task
-                            bnshcode = flow.task[task_name] << BeanshellCode(implementation_code,
-                                                                         inputs = myinputs,
-                                                                         outputs = myoutputs
-                            )
-                            mytask[task_name] = bnshcode
-                        elif x['@type'] == 'ExternalTool':
-                            # ExternalTool task
-                            externaltoolcode = flow.task[task_name] << ExternalTool(implementation_code,
-                                                                         inputs = myinputs,
-                                                                         outputs = myoutputs
-                            )
-                            mytask[task_name] = externaltoolcode
+                        submodel = self.create_submodel(flow, x)
+                        tasks[task_name] = submodel
                 else:
-                    implementation_code  = str(elem['implementation']['code']['#text'])
                     task_name = elem['@id']
-                    if elem['@type'] == 'BeanshellCode' or elem['@type'] == 'ExternalTool':
-                        #print elem
-                        # ports
-                        #print elem['ports']['in']
-                        #loop over in-ports
-                        myinputs = dict()
-                        if type(elem['ports']['in']) is list:
-                            for in_ports in elem['ports']['in']:
-                                #print in_ports
-                                if in_ports['@datatype'] == 'string':
-                                    myinputs[in_ports['@id']] = String
-                        else:
-                            if elem['ports']['in']['@datatype'] == 'string':
-                                myoutputs[elem['ports']['in']['@id']] = String
+                    submodel = self.create_submodel(flow, x)
+                    tasks[task_name] = submodel
+            else:
+                pass
 
-                        #loop over out-ports
-                        myoutputs = dict()
-                        if type(elem['ports']['out']) is list:
-                            for out_ports in elem['ports']['out']:
-                                print out_ports
-                                if out_ports['@datatype'] == 'string':
-                                    myoutputs[out_ports['@id']] = String
-                        else:
-                            if elem['ports']['out']['@datatype'] == 'string':
-                                myoutputs[elem['ports']['out']['@id']] = String
+        # create empty instance
+        instances = dict()
 
-                        if elem['@type'] == 'BeanshellCode':
-                            # BeanshellCode task
-                            bnshcode = flow.task[task_name] << BeanshellCode(implementation_code,
-                                                                         inputs = myinputs,
-                                                                         outputs = myoutputs
-                            )
-                            mytask[task_name] = bnshcode
-                        elif elem['@type'] == 'ExternalTool':
-                            # ExternalTool task
-                            externaltoolcode = flow.task[task_name] << ExternalTool(implementation_code,
-                                                                         inputs = myinputs,
-                                                                         outputs = myoutputs
-                            )
-                            mytask[task_name] = externaltoolcode
-                    else:
-                        raise Exception('The submodel type does not exist')
+        # import topology
+        topology = xmml['model']['topology']
 
-
-        # link the tasks
-        #print terminals
-        #print xmml['model']['topology']
-        myinstances = dict()
-        # elem_top contains in two different dictionaries 
-        for type_top, elem_top in xmml['model']['topology'].items():
-            if type_top == 'instance':
-                for instance in elem_top:
-                    #print instance
-                    #print instance['@id']
+        # loop over topology elements (instance and coupling)
+        for type_elem_topology, elem_topology in topology.items():
+            if type_elem_topology == 'instance':
+                for instance in elem_topology:
                     if '@submodel' in instance.keys():
-                        single_instance = ('submodel', instance['@submodel'])
+                        myinstance = Instance(kind='submodel', content=instance['@submodel'])
                     elif '@terminal' in instance.keys():
-                        single_instance = ('terminal', instance['@terminal'])
-                    myinstances[instance['@id']] = single_instance
-            if type_top == 'coupling':
-                for coupling in elem_top:
+                        myinstance = Instance(kind='terminal', content=instance['@terminal'])
+                    instances[instance['@id']] = myinstance
+            if type_elem_topology == 'coupling':
+                for coupling in elem_topology:
                     data_from = coupling['@from']
                     data_from_instance = data_from.split(".")[0]
                     data_from_port = data_from.split(".")[1]
                     data_to = coupling['@to']
                     data_to_instance = data_to.split(".")[0]
                     data_to_port = data_to.split(".")[1]
-                    #print data_from
-                    #print data_to
                     # coupling from a terminal to a submodel
-                    if myinstances[data_from_instance][0] == 'terminal' and myinstances[data_to_instance][0] == 'submodel':
-                        #print terminals[myinstances[data_from_instance][1]]
-                        #print mytask[myinstances[data_to_instance][1]]
-                        if terminals[myinstances[data_from_instance][1]]._kind == 'source':
+                    if instances[data_from_instance].kind == 'terminal' and instances[data_to_instance].kind == 'submodel':
+                        if terminals[instances[data_from_instance].content].kind == 'source':
                             data_left =  flow.input[data_from_port]
-                            data_right = mytask[myinstances[data_to_instance][1]].input[data_to_port]
+                            data_right = tasks[instances[data_to_instance].content].input[data_to_port]
                             data_left | data_right
                     # coupling from a submodel to a terminal
-                    elif myinstances[data_from_instance][0] == 'submodel' and myinstances[data_to_instance][0] == 'terminal':
-                        if terminals[myinstances[data_to_instance][1]]._kind == 'sink':
-                            data_left = mytask[myinstances[data_from_instance][1]].output[data_from_port]
+                    elif instances[data_from_instance].kind == 'submodel' and instances[data_to_instance].kind == 'terminal':
+                        if terminals[instances[data_to_instance].content].kind == 'sink':
+                            data_left = tasks[instances[data_from_instance].content].output[data_from_port]
                             data_right = flow.output[data_to_port]
                             data_left | data_right
                     # coupling from a submodel to a submodel
-                    elif myinstances[data_from_instance][0] == 'submodel' and myinstances[data_to_instance][0] == 'submodel':
-                        data_left = mytask[myinstances[data_from_instance][1]].output[data_from_port]
-                        data_right = mytask[myinstances[data_to_instance][1]].input[data_to_port]
+                    elif instances[data_from_instance].kind == 'submodel' and instances[data_to_instance].kind == 'submodel':
+                        data_left = tasks[instances[data_from_instance].content].output[data_from_port]
+                        data_right = tasks[instances[data_to_instance].content].input[data_to_port]
                         data_left | data_right
         
-        #a = mytask['HW1']
-        #flow.input['stringaaa1'] | a.input['string1']
-        #flow.input['strinaaag2'] | a.input['string2']
-        #a = bnshcode.output.outputstr
-        #b = flow.output['output_str']
-        #a | b
-        #bnshcode.output.outputstr | flow.output.output_str    
-        ##flow = readZapyFile(sourceFile, flowName)
-
         if validate:
             from t2wrapper import WrapperWorkflow
             flow = WrapperWorkflow(flow, validate, zip)
@@ -269,10 +225,10 @@ class T2FlowBuilder:
         output = UTF8Writer(t2flow)
 
         #if compressed:
-	#    print 'compressed'
+        #    print 'compressed'
         #    flow.exportXML(XMLExport.XMLExporter(XMLExport.XMLCompressor(output)))
         #else:
-	#    print 'not compressed'
+        #    print 'not compressed'
         flow.exportXML(XMLExport.XMLExporter(XMLExport.XMLIndenter(output)))
 
 if __name__ == '__main__':
@@ -299,5 +255,5 @@ if __name__ == '__main__':
             if not target.endswith('.t2flow'):
                 target += '.t2flow'
             t2flow = open(target, 'w')
-        builder = T2FlowBuilder()
+        builder = T2FlowFromXMMLBuilder()
         builder.convert(args.source, t2flow, args.flowName, args.compressed, args.validate, args.zip)
